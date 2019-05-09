@@ -20,23 +20,23 @@ open ScribbleGenerativeTypeProvider.Util.ListHelpers
 (******************* TYPE PROVIDER'S HELPERS *******************)
 
 // CREATING TYPES, NESTED TYPES, METHODS, PROPERTIES, CONSTRUCTORS
-let internal createProvidedType assembly name = 
-    ProvidedTypeDefinition(assembly, ns, name, Some baseType, IsErased=false)
+let internal createProvidedType assembly name =
+    ProvidedTypeDefinition(assembly, ns, name, Some baseType, isErased = false)
 
-let internal createProvidedIncludedType name = 
-    ProvidedTypeDefinition(name,Some baseType, IsErased=false)
+let internal createProvidedIncludedType name =
+    ProvidedTypeDefinition(name,Some baseType, isErased = false)
 
 let internal createProvidedIncludedTypeChoice typing name =
-    ProvidedTypeDefinition(name, Some typing , IsErased=false)
+    ProvidedTypeDefinition(name, Some typing, isErased = false)
 
 let internal createMethodType name param typing expression =
-    ProvidedMethod( name, param, typing, InvokeCode = (fun args -> expression ))
+    ProvidedMethod( name, param, typing, invokeCode = (fun args -> expression ))
 
 let internal createPropertyType name typing expression =
-    ProvidedProperty( name , typing , IsStatic = true, GetterCode = (fun args -> expression ))
+    ProvidedProperty( name , typing , isStatic = true, getterCode = (fun args -> expression ))
 
 let internal createCstor param expression = 
-    ProvidedConstructor( parameters = param, InvokeCode = (fun args -> expression ))
+    ProvidedConstructor( parameters = param, invokeCode = (fun args -> expression ))
 
 
 // ADDING TYPES, NESTED TYPES, METHODS, PROPERTIES, CONSTRUCTORS TO THE ASSEMBLY AND AS MEMBERS OF THE TYPE PROVIDER
@@ -233,7 +233,7 @@ let internal makeRoleTypes (fsmInstance:ScribbleProtocole.Root []) =
     let t = t |> addProperty (Expr.NewObject(ctor,[]) 
               |> createPropertyType "instance" t)
 
-    t.HideObjectMethods <- true
+    //t.HideObjectMethods <- true
     listeType <- t::listeType
     let mutable mapping = Map.empty<_,ProvidedTypeDefinition>.Add(fsmInstance.[0].LocalRole,t)
     for event in fsmInstance do
@@ -245,7 +245,7 @@ let internal makeRoleTypes (fsmInstance:ScribbleProtocole.Root []) =
                         
             let t = t |> addProperty (Expr.NewObject(ctor, []) 
                       |> createPropertyType "instance" t)
-            t.HideObjectMethods <- true                                                                     
+            //t.HideObjectMethods <- true                                                                     
             mapping <- mapping.Add(event.Partner,t)
             localRoles <- event.Partner::localRoles
             listeType <- t::listeType
@@ -254,7 +254,7 @@ let internal makeRoleTypes (fsmInstance:ScribbleProtocole.Root []) =
 let internal makeStateTypeBase (n:int) (s:string) = 
     let ty = (s + string n) |> createProvidedIncludedType
                             |> addCstor (<@@ s+ string n @@> |> createCstor [])
-    ty.HideObjectMethods <- true
+    //ty.HideObjectMethods <- true
     ty
 
 let internal makeStateType (n:int) = makeStateTypeBase n "State"
@@ -507,8 +507,8 @@ let internal makeChoiceLabelTypes (fsmInstance:ScribbleProtocole.Root []) (provi
                         
                         let myMethod = 
                             ProvidedMethod("receive",listParam,nextType,
-                                IsStaticMethod = false,
-                                InvokeCode = fun args-> 
+                                isStatic = false,
+                                invokeCode = fun args-> 
                                     invokeCodeOnReceive args currEvent.Payload   
                                         exprState event.Assertion inferredVars
                                         deserializeChoice)
@@ -518,7 +518,7 @@ let internal makeChoiceLabelTypes (fsmInstance:ScribbleProtocole.Root []) (provi
                         aType <- aType |> addMethod (myMethod)
 
                         aType.SetAttributes(TypeAttributes.Public ||| TypeAttributes.Class)
-                        aType.HideObjectMethods <- true
+                        //aType.HideObjectMethods <- true
                         aType.AddInterfaceImplementation typeCtor
                         
                         if not (alreadySeenOnlyLabel listeLabelSeen currEvent.Label) then 
@@ -544,8 +544,8 @@ let generateMethod aType (methodName:string) listParam nextType (errorMessage:st
         match methodName with
             |"send" -> 
                 [ProvidedMethod(methodName+nameLabel, listParam, nextType,
-                    IsStaticMethod = false,
-                    InvokeCode = fun args-> 
+                    isStatic = false,
+                    invokeCode = fun args-> 
                         invokeCodeOnSend args event.Payload 
                             exprState role fullName 
                             event.Assertion inferredVars)]
@@ -556,25 +556,25 @@ let generateMethod aType (methodName:string) listParam nextType (errorMessage:st
 
                 let recvMethod = 
                     ProvidedMethod(methodName+nameLabel,listParam,nextType,
-                        IsStaticMethod = false,
-                        InvokeCode = fun args -> 
+                        isStatic = false,
+                        invokeCode = fun args -> 
                             invokeCodeOnReceive args event.Payload  
                                 exprState   event.Assertion inferredVars
                                 (deserialize [message] role))
                 let recvMethodAsync = 
                     ProvidedMethod((methodName+nameLabel+"Async"),listParam,nextType, 
-                        IsStaticMethod = false,
-                        InvokeCode = fun args -> 
+                        isStatic = false,
+                        invokeCode = fun args -> 
                             invokeCodeOnReceive args event.Payload 
                                 exprState event.Assertion inferredVars
                                 (deserializeAsync [message] role))
                 [recvMethod; recvMethodAsync]
             |"request" ->
-                [ProvidedMethod(methodName+nameLabel, listParam, nextType, IsStaticMethod = false,
-                    InvokeCode = fun _-> invokeCodeOnRequest role exprState)]
+                [ProvidedMethod(methodName+nameLabel, listParam, nextType, isStatic = false,
+                    invokeCode = fun _-> invokeCodeOnRequest role exprState)]
             |"accept" ->  
-                    [ProvidedMethod(methodName+nameLabel, listParam, nextType, IsStaticMethod = false,
-                        InvokeCode = fun _-> invokeCodeOnAccept role exprState)] 
+                    [ProvidedMethod(methodName+nameLabel, listParam, nextType, isStatic = false,
+                        invokeCode = fun _-> invokeCodeOnAccept role exprState)] 
             | _ -> failwith errorMessage    
 
     methods 
@@ -592,8 +592,8 @@ let generateChoice (aType:ProvidedTypeDefinition) (fsmInstance: ScribbleProtocol
     let event = fsmInstance.[indexOfState]
     let role = event.Partner
     let myMethod = 
-        ProvidedMethod("branch", [],labelType, IsStaticMethod = false, 
-            InvokeCode = (fun _  ->  
+        ProvidedMethod("branch", [],labelType, isStatic = false, 
+            invokeCode = (fun _  ->  
                 invokeCodeOnChoice event.Payload indexList fsmInstance role)) 
     
     let doc = getDocForChoice indexList fsmInstance

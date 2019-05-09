@@ -6,7 +6,6 @@
   <ItemGroup>
     <Compile Include="ProvidedTypes.fsi" />
     <Compile Include="ProvidedTypes.fs" />
-    <Compile Include="DebugProvidedTypes.fs" />
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="DomainModel.fs" />
     <Compile Include="TypeChoices.fs" />

@@ -35,8 +35,8 @@ type internal WatchSpec =
 
 [<TypeProvider>]
 type GenerativeTypeProvider(config : TypeProviderConfig) as this =
-    inherit TypeProviderForNamespaces ()      
-    let tmpAsm = Assembly.LoadFrom(config.RuntimeAssembly)
+    inherit TypeProviderForNamespaces (config)      
+    let tmpAsm = ProvidedAssembly ()
     //let s = TimeMeasure.start()
     //TimeMeasure.measureTime "Starting"   
 
@@ -178,11 +178,10 @@ type GenerativeTypeProvider(config : TypeProviderConfig) as this =
                     |> addIncludedTypeToProvidedType labelList
                     |> addIncludedTypeToProvidedType listTypes
         
-        let assemblyPath = Path.ChangeExtension(System.IO.Path.GetTempFileName(), ".dll")
-        let assembly = ProvidedAssembly assemblyPath
         ty.SetAttributes(TypeAttributes.Public ||| TypeAttributes.Class)
-        ty.HideObjectMethods <- true
-        assembly.AddTypes [ty]
+        printfn "Adding Type %A" ty
+        //ty.HideObjectMethods <- true
+        tmpAsm.AddTypes [ty]
         ty
 
     let createOrUseProvidedTypeDefinition (name:string) (parameters:obj[]) =
