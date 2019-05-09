@@ -71,7 +71,7 @@ module RefinementTypes =
             checker.GetProjectOptionsFromScript(file, input)
             |> Async.RunSynchronously
 
-        checker.ParseAndCheckProject(projOptions |> fst) 
+        checker.ParseAndCheckProject(projOptions)
         |> Async.RunSynchronously
 
 
