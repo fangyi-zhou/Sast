@@ -23,6 +23,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AssertionParsing\AssertionParsing.fsproj" />
+    <ProjectReference Include="..\..\paket-files\fangyi-zhou\FSharp.Configuration\src\FSharp.Configuration\FSharp.Configuration.fsproj" />
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>

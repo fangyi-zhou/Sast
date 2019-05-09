@@ -1,8 +1,8 @@
 source https://www.nuget.org/api/v2
 nuget FAKE
 nuget FParsec
-nuget FSharp.Configuration
 nuget FSharp.Data
 nuget FSharp.Quotations.Evaluator
 nuget SharpYaml
 nuget QuotationCompiler
+github fangyi-zhou/FSharp.Configuration:fix-build
