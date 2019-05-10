@@ -119,8 +119,13 @@ type GenerativeTypeProvider(config : TypeProviderConfig) as this =
                 parsed
             | None -> failwith "The file given does not contain a valid fsm"
 
-    let generateTypes (fsm:string) (variablesMap : Map<string, AssertionParsing.Expr>) (name:string) (parameters:obj[]) = 
-    
+    let generateTypes
+        (fsm: string)
+        (variablesMap: Map<string, AssertionParsing.Expr>)
+        (name: string)
+        (parameters: obj[])
+        (tmpAsm: ProvidedAssembly) =
+
         let configFilePath = parameters.[0]  :?> string
         let delimitaters = parameters.[1]  :?> string
         let explicitConnection = parameters.[4] :?> bool
@@ -185,9 +190,10 @@ type GenerativeTypeProvider(config : TypeProviderConfig) as this =
         ty
 
     let createOrUseProvidedTypeDefinition (name:string) (parameters:obj[]) =
-        match cachedTypes.TryGetValue name with 
-        | true, typeDef -> 
-            TimeMeasure.measureTime "From the cache"     
+        let tmpAsm = ProvidedAssembly ()
+        match cachedTypes.TryGetValue name with
+        | true, typeDef ->
+            TimeMeasure.measureTime "From the cache"
             typeDef
         | _ -> 
             let file = parameters.[0] :?> string
@@ -250,12 +256,13 @@ type GenerativeTypeProvider(config : TypeProviderConfig) as this =
             let variablesMap : Map<string, AssertionParsing.Expr> = Map.empty
             let size = parameters.Length
             //TimeMeasure.measureTime "Before Type generation"
-            let genType = generateTypes fsm  variablesMap name parameters.[3..(size-1)]
+            let genType = generateTypes fsm  variablesMap name parameters.[3..(size-1)] tmpAsm
             cachedTypes.Add(name, genType)
             //TimeMeasure.measureTime "After Type generation"
             genType
 
-    let providedType = TypeGeneration.createProvidedType tmpAsm "TypeProviderFile"       
+    let asm = Assembly.LoadFrom config.RuntimeAssembly
+    let providedType = TypeGeneration.createProvidedType asm "TypeProviderFile"
     let parametersTP=  [ProvidedStaticParameter("File Uri",typeof<string>);
                           ProvidedStaticParameter("Global Protocol",typeof<string>);
                           ProvidedStaticParameter("Role",typeof<string>);
