@@ -36,7 +36,7 @@ type Transition =
         Role        : Role
         Partner     : Partner
         Label       : Label
-        Payload     : Payload     
+        Payload     : Payload
         EventType   : EventType
         Next        : Next
     }
@@ -45,12 +45,12 @@ type Transition =
         let (Role role)             = this.Role
         let (Partner partner)       = this.Partner
         let (Label label)           = this.Label
-        let (Payload payload)       = this.Payload     
+        let (Payload payload)       = this.Payload
         let (EventType eventType)   = this.EventType
         let (Next next)             = this.Next
 
         sprintf
-            """{ "currentState": %i , "localRole":"%s" , "partner":"%s" , "label":"%s" , "payload": %s , "type":"%s" , "nextState":%i  } """        
+            """{ "currentState": %i , "localRole":"%s" , "partner":"%s" , "label":"%s" , "payload": %s , "type":"%s" , "nextState":%i  } """
             current
             role
             partner
@@ -61,7 +61,7 @@ type Transition =
                 printListJson payload
             )
             eventType
-            next         
+            next
 
 type StateMachine =
     | Transitions of Transition list
@@ -73,7 +73,7 @@ type StateMachine =
                 (if index < length then
                     state + (transition.Stringify()) + ",\n"
                  else
-                    state + (transition.Stringify())                    
+                    state + (transition.Stringify())
                 , index + 1)
             ) ("[",1) transitionList
         |> fun (state,_) -> state + "]"
@@ -86,42 +86,42 @@ module parserHelper =
     let char_ws c = pchar c .>> spaces
     let anyCharsTill pEnd = manyCharsTill anyChar pEnd
     let anyCharsTillApply pEnd f = manyCharsTillApply anyChar pEnd f
-    let quoted quote parser = 
-        pchar (quote |> fst) 
-        .>> spaces >>. parser .>> spaces 
-        .>> pchar (quote |> snd) 
+    let quoted quote parser =
+        pchar (quote |> fst)
+        .>> spaces >>. parser .>> spaces
+        .>> pchar (quote |> snd)
     let line:Parser<string,unit> = anyCharsTill newline
     let restOfLineAfter str = str_ws str >>. line
-    let startUpUseless:Parser<_,unit> = 
-        pstring "compound = true;" 
+    let startUpUseless:Parser<_,unit> =
+        pstring "compound = true;"
         |> anyCharsTill
-        // >>. skipNewline 
-         
-    let current:Parser<_,unit> = 
-        spaces 
-        >>. quoted quotes pint32 .>> spaces 
+        // >>. skipNewline
+
+    let current:Parser<_,unit> =
+        spaces
+        >>. quoted quotes pint32 .>> spaces
         |>> Current
-    let next:Parser<_,unit> = 
-        spaces 
-        >>. quoted quotes pint32 .>> spaces 
+    let next:Parser<_,unit> =
+        spaces
+        >>. quoted quotes pint32 .>> spaces
         |>> Next
-    
+
     let partnerEvent:Parser<_,unit> =
         str_ws "label"
         >>. pstring "=" >>. spaces
         >>. pchar '\"'
         >>. (anyCharsTillApply (pchar '!' <|> pchar '?') (fun str event -> (str,event)))
-        |>> fun (str,event) -> 
+        |>> fun (str,event) ->
                 match event with
-                | '!' -> 
+                | '!' ->
                     Partner(str),EventType("send")
                 | '?' ->
-                    Partner(str),EventType("receive")                
+                    Partner(str),EventType("receive")
                 | _ ->
                     failwith "This case can never happen, if these two weren't here the flow would
                     have been broken earlier!!"
 
-    let label:Parser<_,unit> = 
+    let label:Parser<_,unit> =
         spaces
         >>. (anyCharsTill (pchar '('))
         |>> Label
@@ -130,12 +130,12 @@ module parserHelper =
             spaces
             >>. manyChars (noneOf [',';')'])
         spaces
-        >>. between 
-                spaces 
-                (pstring ")\"" >>. spaces >>. pstring "];" >>. spaces) 
-                (sepBy singlePayload (pstring ",")) 
-        |>> Payload        
-   
+        >>. between
+                spaces
+                (pstring ")\"" >>. spaces >>. pstring "];" >>. spaces)
+                (sepBy singlePayload (pstring ","))
+        |>> Payload
+
     let transition role currentState =
         parse{
             let! _ = pstring "->"
@@ -144,13 +144,13 @@ module parserHelper =
             let! partner,eventType = partnerEvent
             let! label = label
             let! payload = payload
-            return 
+            return
                 {
                     Current     = currentState
                     Role        = Role role
                     Partner     = partner
                     Label       = label
-                    Payload     = payload     
+                    Payload     = payload
                     EventType   = eventType
                     Next        = nextState
                 } |> Some
@@ -168,40 +168,40 @@ module parserHelper =
             let! currentState = current .>> spaces
             return! transition role currentState <|> skipLabelInfoLine
         }
-    let transitions role = 
+    let transitions role =
         parse{
             let! _ = startUpUseless
             do! spaces
-            let! list = (many (transitionOrSkipping role)) 
+            let! list = (many (transitionOrSkipping role))
             printfn "%A" list
-            return 
-                list 
-                |> List.filter Option.isSome 
+            return
+                list
+                |> List.filter Option.isSome
                 |> List.map Option.get
                 |> Transitions
         }
-module Parsing = 
+module Parsing =
     open parserHelper
     type ScribbleAPI = FSharp.Data.JsonProvider<""" { "code":"Code", "proto":"global protocol", "role":"local role" } """>
     type DiGraph = FSharp.Data.JsonProvider<""" {"result":"value"} """>
     type ScribbleProtocole = FSharp.Data.JsonProvider<""" [ { "currentState":0 , "localRole":"StringLocalRole" , "partner":"StringPartner" , "label":"StringLabel" , "payload":["StringTypes"] , "type":"EventType" , "nextState":0  } ] """>
-                        
+
 
     let isCurrentChoice (fsm:ScribbleProtocole.Root []) (index:int) =
         let current = fsm.[index].CurrentState
-        let mutable size = 0 
+        let mutable size = 0
         for elem in fsm do
             if elem.CurrentState = current then
                 size <- size + 1
         (size>1)
 
     let modifyAllChoice (fsm:ScribbleProtocole.Root []) =
-        let mutable newArray = [||] 
+        let mutable newArray = [||]
         for i in 0..(fsm.Length-1) do
             let elem = fsm.[i]
             if elem.Type = "receive" && (isCurrentChoice fsm i) then
                 let newElem = ScribbleProtocole.Root(elem.CurrentState,elem.LocalRole,elem.Partner,elem.Label,elem.Payload,"choice",elem.NextState)
-                newArray <- Array.append newArray [|newElem|]            
+                newArray <- Array.append newArray [|newElem|]
             else
             newArray <- Array.append newArray [|elem|]
         newArray
@@ -217,7 +217,7 @@ module Parsing =
             let role = ScribbleAPI.Parse(json)
             let test = run (transitions (role.Role) ) s0
             match test with
-            | Failure (error,_,_) -> 
+            | Failure (error,_,_) ->
                 printfn "%s" error
                 None
             | Success (res,_,_) ->
@@ -235,9 +235,8 @@ module Parsing =
                                 Payload     = tr.Payload |> List.ofArray |> Payload
                                 EventType   = tr.Type |> EventType
                                 Next        = tr.NextState |> Next
-                            }  
+                            }
                     ] |> Transitions
                 Some (finalRes.Stringify())
-                
-    let getFSMJson (json:string) = getArrayJson json
 
+    let getFSMJson (json:string) = getArrayJson json

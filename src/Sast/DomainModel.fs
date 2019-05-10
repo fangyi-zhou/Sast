@@ -3,7 +3,7 @@
 open System.Threading
 open FSharp.Configuration
 
-// Scribble Type 
+// Scribble Type
 type ScribbleProtocole = FSharp.Data.JsonProvider<""" [ { "currentState":0 , "localRole":"StringLocalRole" , "partner":"StringPartner" , "label":"StringLabel" ,"payload":[{"varName":"someZ", "varType":"someType"}] ,"assertion":"expression", "inferred":"expressionMap", "type":"EventType" , "nextState":0  } ] """>
 
 type ScribbleAPI = FSharp.Data.JsonProvider<""" { "code":"Code", "proto":"global protocol", "role":"local role" } """>
@@ -24,27 +24,27 @@ type Buf<'T>() =
     interface ISetResult with
         member this.SetValue(res) =
             this.SetResult(unbox<'T> res)
-        member this.GetTask() = 
+        member this.GetTask() =
             this.Task.IsCompleted
 
 
-// Agent Type + Messages Types = DU 
-type Agent<'T> = MailboxProcessor<'T> 
- 
+// Agent Type + Messages Types = DU
+type Agent<'T> = MailboxProcessor<'T>
+
 type Message =
     |SendMessage of byte [] * string // (serialized message to be put in the tcp Stream , role of the partner)
     |ReceiveMessage of (byte[] * string list) list * string * AsyncReplyChannel<byte [] list> // (serialized message to be put in the tcp Stream , the reply channel , role of the partner)
     |ReceiveMessageAsync of byte[] list * string * string list * AsyncReplyChannel<byte [] list> // (serialized message to be put in the tcp Stream , the reply channel , role of the partner)
-    |Stop 
+    |Stop
 
-// TYPE PROVIDER'S ASSEMBLY (for generative type provider) + NAMESPACE + BASETYPE 
+// TYPE PROVIDER'S ASSEMBLY (for generative type provider) + NAMESPACE + BASETYPE
 let internal ns = "ScribbleGenerativeTypeProvider.Provided"
 //let asm = ProvidedAssembly(Path.ChangeExtension(Path.GetTempFileName(), ".dll"))
 let baseType = typeof<obj>
 
 let mutable mappingDelimitateur = Map.empty<string,string list * string list * string list>
 
-let modifyMap delim = 
+let modifyMap delim =
     mappingDelimitateur <- delim
 
 let getDelims label =
@@ -62,14 +62,14 @@ let metaYaml = "Partners:
 LocalRole:
   Name: Me
   IP: 127.0.0.1
-  Port: 5000 
+  Port: 5000
 "
 
 type ConfigFile = YamlConfig<YamlText=metaYaml>
 let config = ConfigFile()
 
 
-// Result Monad + End type 
+// Result Monad + End type
 type End internal () = class end
 
 type IFailure =
@@ -77,5 +77,3 @@ type IFailure =
 
 
 let createFailure (failure:#IFailure) = failwith failure.Description
-
-

@@ -7,13 +7,13 @@ open Microsoft.FSharp.Quotations
 open ProviderImplementation.ProvidedTypes
 open AssertionParsing
 
-open System.Reflection 
+open System.Reflection
 open System.Text
 open System.IO
 
 
 module Fsi =
-    // Create an interactive checker instance 
+    // Create an interactive checker instance
 //    let checker = FSharpChecker.Create()
 
     // Intialize output and input streams
@@ -28,7 +28,7 @@ module Fsi =
     let allArgs = Array.append argv [|"--noninteractive"|]
 
     let fsiConfig = FsiEvaluationSession.GetDefaultConfiguration()
-    let fsiSession = FsiEvaluationSession.Create(fsiConfig, allArgs, inStream, outStream, errStream) 
+    let fsiSession = FsiEvaluationSession.Create(fsiConfig, allArgs, inStream, outStream, errStream)
 
 
 module RefinementTypes =
@@ -42,7 +42,7 @@ module RefinementTypes =
         {
             fnType      : SourceCodeServices.FSharpType
             untypedFn   : obj list -> bool option
-            argNames    : string list        
+            argNames    : string list
         }
     type FnRule =
         {
@@ -50,24 +50,24 @@ module RefinementTypes =
             fnInfos : FnRuleInfos
         }
 
-    
+
     type ArgInfos =
         {
             argType : SourceCodeServices.FSharpType // Type maybe
             value   : obj option // boxed value
         }
-    type Arg = 
+    type Arg =
         {
             argName     : string
             argInfos    : ArgInfos
         }
-        
-    let parseAndCheckSingleFile (input) = 
+
+    let parseAndCheckSingleFile (input) =
         let file = Path.ChangeExtension(System.IO.Path.GetTempFileName(), "fsx")
         File.WriteAllText(file, input)
         let checker = SourceCodeServices.FSharpChecker.Create(keepAssemblyContents=true)
 
-        let projOptions = 
+        let projOptions =
             checker.GetProjectOptionsFromScript(file, input)
             |> Async.RunSynchronously
 
@@ -83,26 +83,26 @@ module RefinementTypes =
     (***           2)  Extract variables in order for each functions              ***)
     (*** ************************************************************************ ***)
     (*** ************************************************************************ ***)
-    
+
     let generateFooAndGetArgsInfos index ruleFunction =
-        let input = 
+        let input =
             """
-        module MyLibrary 
+        module MyLibrary
         open System
-            """ 
+            """
         let foo = sprintf "let foo%i = %s" index ruleFunction
         let singleFile = input + foo
 
         let checkProjectResults = parseAndCheckSingleFile(singleFile)
-        let err = checkProjectResults.Errors 
+        let err = checkProjectResults.Errors
         // should be empty
-        match err with 
-        | [||] -> 
+        match err with
+        | [||] ->
             let checkedFile = checkProjectResults.AssemblyContents.ImplementationFiles.[0]
-    
-            let rec getKeys decls = 
-                match decls with 
-                | FSharpImplementationFileDeclaration.Entity (_, subDecls) -> 
+
+            let rec getKeys decls =
+                match decls with
+                | FSharpImplementationFileDeclaration.Entity (_, subDecls) ->
                     let subDecl = subDecls.Head
                     getKeys subDecl
                 | FSharpImplementationFileDeclaration.MemberOrFunctionOrValue(value, valueListList, e) ->
@@ -112,13 +112,13 @@ module RefinementTypes =
                                 yield valueList.Head
                         ]
                     // TODO : Return a List of parameters with information regarding the type...
-                    // TODO : Maybe add events between functions such that our functions can trigger 
+                    // TODO : Maybe add events between functions such that our functions can trigger
                     // the evaluation at compile-time if that's possible (Not run-time because e verything will be written once!!)
-                    
+
                     // we return the couple (foo_i, [param1, param2, param3])
-                    (value.CompiledName, argList, value) 
-                | FSharpImplementationFileDeclaration.InitAction(_) -> 
-                    failwith "unexpected InitAction in file Declaration!! Issue with library not protocol specification" 
+                    (value.CompiledName, argList, value)
+                | FSharpImplementationFileDeclaration.InitAction(_) ->
+                    failwith "unexpected InitAction in file Declaration!! Issue with library not protocol specification"
 
             checkedFile.Declarations.Head
             |> getKeys
@@ -126,7 +126,7 @@ module RefinementTypes =
             failwith (sprintf "%A" err.[0])
 
 
-//    let (foo,keys,value) = generateFooAndGetArgsInfos 1 fstRule    
+//    let (foo,keys,value) = generateFooAndGetArgsInfos 1 fstRule
 //    let res = value.FullType
 
     (*** ************************************************************************ ***)
@@ -150,7 +150,7 @@ module RefinementTypes =
                         |> Array.head
                     let nextPartialFn = methodInfo.Invoke(partialFn, [| args.Head |])
                     helper nextPartialFn args.Tail
-                else 
+                else
                     None
             | true ->
                 if fnType = typeof<bool> then
@@ -159,36 +159,36 @@ module RefinementTypes =
                 else
                     None
         helper fn args
-    
+
     // TODO : Provide error handling, this can throw weird exceptions need to wrap that properly
     let untypedEvaluation ruleFunction =
         //let test = "fun (p2:int) (res:int) (z:int) -> z = p2 && res = 0"
         let evaluatedExpression = fsiSession.EvalExpression(ruleFunction)
         evaluatedExpression.Value.ReflectionValue
-        |> invokeUntype 
-        
+        |> invokeUntype
+
 //    let res = untypedEvaluation sndRule    // [5;4]
 //    let res2 = res [8;4]
 
-    let createFnRule index ruleFunction = 
+    let createFnRule index ruleFunction =
         let (fooName, args, fooType) = generateFooAndGetArgsInfos index ruleFunction
         let (untypedFoo) = untypedEvaluation ruleFunction
-        
-        let argList = 
+
+        let argList =
             [ for arg in args do
                   yield { argName = arg.CompiledName
-                          argInfos = 
+                          argInfos =
                               { argType = arg.FullType
                                 value = None } } ]
-        
-        let fnRule = 
+
+        let fnRule =
             { fnName    = fooName
-              fnInfos   = 
-                  { 
-                    fnType    = fooType.FullType              
+              fnInfos   =
+                  {
+                    fnType    = fooType.FullType
                     untypedFn = untypedFoo
                     argNames = args |> List.map (fun x -> x.CompiledName) } }
-        
+
         ((fnRule, argList),(fooName,fnRule.fnInfos.argNames))
 
 
@@ -207,7 +207,7 @@ module RefinementTypes =
 
 //    let fstEl = createFnRule 1 fstRule
 //    let sndEl = createFnRule 2 sndRule
-//    
+//
 //
 //    addToDict fstEl
 //    addToDict sndEl
@@ -220,7 +220,7 @@ module RefinementTypes =
 //
 //    dictArgInfos
 //    dictFunInfos
-//    getArgValue "x"            
+//    getArgValue "x"
 
 
 
@@ -238,10 +238,10 @@ module RefinementTypes =
 //
 //
 //    let fn = "fun x y -> x<y" -> <@ fun x y -> x<y @>
-//    
+//
 //    let fn = "fun x y -> x<y" int -> int -> bool
 //    let fn2 = "fun x -> x = 7" int -> bool
-//    
+//
 //
 //    let something =
 //        fun x ->
@@ -256,40 +256,40 @@ module RefinementTypes =
 //                ValidationError
 //
 //    let quotation = <@ x<y @>
-//    
-//    let sndQuot = 
+//
+//    let sndQuot =
 //        <@@
-//            let fn = 
-//            
-//        
+//            let fn =
+//
+//
 //        @@>
-//        
-// 
 //
 //
 //
-//let c2 = c1.branch() 
-//match c2 with 
-//| :? Case1 as case1 ->    
-//    let c3 = case1.branch()    
-//    match c3 with       
-//    | :? Case31 as case31 -> case31.SendHi().End()       
-//    | :? Case32 as case32 -> case32.SendSomething().End()       
-//    | :? Case33 as case33 -> case33.SendHi().ReceiveHiBack().End() 
-//| :? Case2 as case2 -> case2.SendBye().End()        
+//
+//
+//let c2 = c1.branch()
+//match c2 with
+//| :? Case1 as case1 ->
+//    let c3 = case1.branch()
+//    match c3 with
+//    | :? Case31 as case31 -> case31.SendHi().End()
+//    | :? Case32 as case32 -> case32.SendSomething().End()
+//    | :? Case33 as case33 -> case33.SendHi().ReceiveHiBack().End()
+//| :? Case2 as case2 -> case2.SendBye().End()
 //
 //
 //
-//let h1 case1 =    
-//    let h32 case32 = case32.SendSomething().End()    
-//    let h33 case33 = case33.SendHi().ReceiveHiBack().End()    
-//    let h31 case31 = case31.SendHi().End()    
-//    
-//    case1.branch().handle h31 h32 h33 
+//let h1 case1 =
+//    let h32 case32 = case32.SendSomething().End()
+//    let h33 case33 = case33.SendHi().ReceiveHiBack().End()
+//    let h31 case31 = case31.SendHi().End()
+//
+//    case1.branch().handle h31 h32 h33
 //    handle : (H31Type -> END) * (H32Type -> END) * (H33 -> END) -> END
 //
-//let h2 case2 = case2.SendBye().End() 
+//let h2 case2 = case2.SendBye().End()
 //let c2 = c1.branch().handle h1 h2
 //
 //
-//                
+//
