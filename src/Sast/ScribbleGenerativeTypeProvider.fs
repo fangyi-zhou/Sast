@@ -93,10 +93,12 @@ type GenerativeTypeProvider(config : TypeProviderConfig) as this =
             let scribbleArgs =
                 sprintf "-c \"scribblec.sh %s -ass %s -ass-fsm %s -Z3 > %s 2>&1\"" pathToFile protocol localRole tempFileName
             ProcessStartInfo("bash", scribbleArgs)
-        let psi =
+        (*let psi =
             if System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform (System.Runtime.InteropServices.OSPlatform.Windows)
                 then psi_windows ()
                 else psi_unix ()
+                *)
+        let psi = psi_unix () (* FIXME: Hardcode unix*)
         psi.UseShellExecute <- false; psi.CreateNoWindow <- true;
 
         // Run the cmd process and wait for its completion
