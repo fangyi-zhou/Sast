@@ -5,4 +5,5 @@ nuget FSharp.Data
 nuget FSharp.Quotations.Evaluator
 nuget SharpYaml
 nuget QuotationCompiler
-github fangyi-zhou/FSharp.Configuration:dev
+nuget FSharp.Configuration
+nuget FSharp.Compiler.Service

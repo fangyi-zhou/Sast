@@ -1,4 +1,6 @@
 QuotationCompiler
-FSharp.Data 
+FSharp.Data
 FSharp.Quotations.Evaluator
 FParsec
+FSharp.Configuration
+FSharp.Compiler.Service
