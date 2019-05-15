@@ -14,7 +14,7 @@ open FSharp.Data
 open ScribbleGenerativeTypeProvider.TypeGeneration
 open ScribbleGenerativeTypeProvider.DomainModel
 open ScribbleGenerativeTypeProvider.CommunicationAgents
-open ScribbleGenerativeTypeProvider.RefinementTypesDict
+//open ScribbleGenerativeTypeProvider.RefinementTypesDict
 open ScribbleGenerativeTypeProvider.AsstScribbleParser
 open ScribbleGenerativeTypeProvider.Util
 
@@ -90,8 +90,9 @@ type GenerativeTypeProvider(config : TypeProviderConfig) as this =
                                     batFile pathToFile protocol localRole tempFileName
             ProcessStartInfo("cmd.exe", scribbleArgs)
         let psi_unix () =
+            let scribble = "/Users/fangyi/session/scribble-java/scribble-dist/target/scribblec.sh"
             let scribbleArgs =
-                sprintf "-c \"scribblec.sh %s -ass %s -ass-fsm %s -Z3 > %s 2>&1\"" pathToFile protocol localRole tempFileName
+                sprintf "-c \"%s %s -ass %s -ass-fsm %s -Z3 > %s 2>&1\"" scribble pathToFile protocol localRole tempFileName
             ProcessStartInfo("bash", scribbleArgs)
         (*let psi =
             if System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform (System.Runtime.InteropServices.OSPlatform.Windows)
@@ -163,10 +164,10 @@ type GenerativeTypeProvider(config : TypeProviderConfig) as this =
         (tupleLabel |> fst) |> Runtime.addLabel
         let agentRouter = createRouter (DomainModel.config)  listOfRoles explicitConnection
         Runtime.addAgent "agent" agentRouter
-        let cache = createCache
-        let assertionLookUp = createlookUp
-        Runtime.initAssertionDict "agent" assertionLookUp
-        Runtime.initCache "cache" cache
+        // let cache = createCache
+        // let assertionLookUp = createlookUp
+        // Runtime.initAssertionDict "agent" assertionLookUp
+        // Runtime.initCache "cache" cache
 
         addProperties listTypes listTypes (Set.toList stateSet) (fst tupleLabel) (fst tupleRole) protocol
 
@@ -251,6 +252,7 @@ type GenerativeTypeProvider(config : TypeProviderConfig) as this =
                                 TimeMeasure.measureTime "After Scribble Compiler"
                                 let p = parseCFSM parsedScribble protocol localRole typeAliasing
                                 TimeMeasure.measureTime "After Parsing "
+                                printfn "%s" p
                                 p
                             finally
                                 if File.Exists(tempFileName) then File.Delete(tempFileName)

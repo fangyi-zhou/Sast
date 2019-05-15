@@ -72,8 +72,9 @@ let serPayloads (args:Expr list) (listTypes:string list) (payloadDelim:string)
                     let ranFoo =
                         // No Assertion provided
                         if (foo <> "" &&  argName <> "") then
-                            Runtime.addArgValueToAssertionDict "agent" argName spliced
-                            Runtime.runFooFunction "agent" foo
+                            //Runtime.addArgValueToAssertionDict "agent" argName spliced
+                            //Runtime.runFooFunction "agent" foo
+                            Some true
                         else
                             Some true
                     match ranFoo with
@@ -99,10 +100,11 @@ let serPayloads (args:Expr list) (listTypes:string list) (payloadDelim:string)
                         // No Assertion provided
                         if (foo <> "" &&  argName <> "") then
                             // TimeMeasure.measureTime "before assertion"
-                            Runtime.addArgValueToAssertionDict "agent" argName spliced
-                            let res = Runtime.runFooFunction "agent" foo
+                            //Runtime.addArgValueToAssertionDict "agent" argName spliced
+                            //let res = Runtime.runFooFunction "agent" foo
                             // TimeMeasure.measureTime "after assertion res"
-                            res
+                            //res
+                            Some true
                         else
                             Some true
                     match ranFoo with
@@ -198,10 +200,11 @@ let deserialize (messages: _ list) (role:string) (args: Expr list) (listTypes:st
         let ranFoo =
             // No Assertion provided
             if foo <> "" then
-                (argsNames,received)
-                ||> List.map2(fun argName rcv -> Runtime.addArgValueToAssertionDict "agent" argName rcv )
-                |> ignore
-                Runtime.runFooFunction "agent" foo
+                //(argsNames,received)
+                //||> List.map2(fun argName rcv -> Runtime.addArgValueToAssertionDict "agent" argName rcv )
+                //|> ignore
+                //Runtime.runFooFunction "agent" foo
+                Some true
             else
                 Some true
 
@@ -228,10 +231,11 @@ let deserializeAsync (messages: _ list) (role:string) (args: Expr list)  (listTy
                     let ranFoo =
                         // No Assertion provided
                         if foo <> "" then
-                            (argsNames,received)
-                            ||> List.map2(fun argName rcv -> Runtime.addArgValueToAssertionDict "agent" argName rcv )
-                            |> ignore
-                            Runtime.runFooFunction "agent" foo
+                            //(argsNames,received)
+                            //||> List.map2(fun argName rcv -> Runtime.addArgValueToAssertionDict "agent" argName rcv )
+                            //|> ignore
+                            //Runtime.runFooFunction "agent" foo
+                            Some true
                         else
                             Some true
                     match ranFoo with
@@ -259,10 +263,11 @@ let deserializeChoice (args: Expr list) (listTypes:string list) argsNames foo =
         let ranFoo =
             // No Assertion provided
             if foo <> "" then
-                (argsNames,received)
-                ||> List.map2(fun argName rcv -> Runtime.addArgValueToAssertionDict "agent" argName rcv)
-                |> ignore
-                Runtime.runFooFunction "agent" foo
+                // (argsNames,received)
+                // ||> List.map2(fun argName rcv -> Runtime.addArgValueToAssertionDict "agent" argName rcv)
+                // |> ignore
+                // Runtime.runFooFunction "agent" foo
+                Some true
             else
                 Some true
 

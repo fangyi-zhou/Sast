@@ -14,7 +14,7 @@ open AssertionParsing.InferredVarsParser
 open ScribbleGenerativeTypeProvider.DomainModel
 open ScribbleGenerativeTypeProvider.CommunicationAgents
 open ScribbleGenerativeTypeProvider.IO
-open ScribbleGenerativeTypeProvider.RefinementTypes
+//open ScribbleGenerativeTypeProvider.RefinementTypes
 open ScribbleGenerativeTypeProvider.Util.ListHelpers
 
 (******************* TYPE PROVIDER'S HELPERS *******************)
@@ -265,11 +265,12 @@ let internal makeStateType (n:int) = makeStateTypeBase n "State"
 
 let inlineAssertion assertion  =
         if ((assertion <> "fun expression -> expression") && (assertion <> ""))  then
-            let index = Runtime.getAssertionIndex "agent"
-            let assertion = RefinementTypes.createFnRule index assertion
-            let elem = assertion |> fst
-            Runtime.addToAssertionDict "agent" elem
-            snd assertion
+            // let index = Runtime.getAssertionIndex "agent"
+            // let assertion = RefinementTypes.createFnRule index assertion
+            // let elem = assertion |> fst
+            // Runtime.addToAssertionDict "agent" elem
+            // snd assertion
+            "",[]
         else
             "",[]
 

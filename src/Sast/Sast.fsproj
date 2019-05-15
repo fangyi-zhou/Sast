@@ -42,8 +42,6 @@
     <Compile Include="ProvidedTypes.fs" />
     <Compile Include="DomainModel.fs" />
     <Compile Include="TypeChoices.fs" />
-    <Compile Include="RefinementTypes.fs" />
-    <Compile Include="RefinementTypesDict.fs" />
     <Compile Include="CommunicationAgents.fs" />
     <Compile Include="Runtime.fs" />
     <Compile Include="Util.fs" />

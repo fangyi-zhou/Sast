@@ -1,38 +1,38 @@
-﻿#r "../../../src/Sast/bin/Debug/net452/Sast.dll"
+﻿#r "../../../src/Sast/bin/Debug/Sast.dll"
 
 #load "AdderData.fsx"
 open ScribbleGenerativeTypeProvider
- 
-module Client =          
-    (*type AdderC = 
+
+module Client =
+    (*type AdderC =
         Provided.TypeProviderFile<"../../../Examples/Adder/Protocols/AdderNoAss.scr", "Adder", "C"
             ,"../../../Examples/Adder/Config/configC.yaml", Delimiter=AdderData.delims
             ,TypeAliasing=AdderData.typeAliasing, ScribbleSource = ScribbleSource.LocalExecutable , AssertionsOn =true>*)
-    
-    type AdderC = 
+
+    type AdderC =
         Provided.TypeProviderFile<"../../../Examples/Adder/FSM/FSMAdderNoAssC.txt", "Adder", "C"
             ,"../../../Examples/Adder/Config/configC.yaml", Delimiter=AdderData.delims
             ,TypeAliasing=AdderData.typeAliasing, ScribbleSource = ScribbleSource.File , AssertionsOn =true>
-`   
+`
 
     let numIter = 1000
     let S = AdderC.S.instance
 
-    let rec adderRec a b iter (c0:AdderC.State8) = 
+    let rec adderRec a b iter (c0:AdderC.State8) =
         let res = new DomainModel.Buf<int>()
         let c = c0.sendHELLO(S, 1)
         match iter with
-            |0 -> 
+            |0 ->
                 let c1 = c.sendBYE(S)
                 let c2 = c1.receiveBYE(S)
                 printfn "Fibo : %d" b
                 let finalc = c2.finish()
                 finalc
-            |n -> 
+            |n ->
                 let c1 = c.sendADD(S, a).sendADD(S, b)
-                printfn "Send ADD"   
+                printfn "Send ADD"
                 let c2 = c1.receiveRES(S, res)
-                (*let foo s = if s > 0 then true else false 
+                (*let foo s = if s > 0 then true else false
                 let result = foo (res.getValue())*)
                 adderRec b (res.getValue()) (n-1) c2
 
@@ -40,16 +40,16 @@ module Client =
     let c = client.Init()
     c |> adderRec 1 1 3
 
-module Server = 
-    (*type AdderS = 
+module Server =
+    (*type AdderS =
         Provided.TypeProviderFile<"../../../Examples/Adder/Protocols/AdderNoAss.scr", "Adder", "S" ,"../../../Examples/Adder/Config/configS.yaml"
             ,Delimiter=AdderData.delims, TypeAliasing=AdderData.typeAliasing, AssertionsOn=true>
     *)
-    
-    type AdderS = 
+
+    type AdderS =
         Provided.TypeProviderFile<"../../../Examples/Adder/FSM/FSM/AdderNoAssS.txt", "Adder", "S" ,"../../../Examples/Adder/Config/configS.yaml"
             ,Delimiter=AdderData.delims, TypeAliasing=AdderData.typeAliasing, ScribbleSource = ScribbleSource.File, AssertionsOn=true>
-    
+
 
     let C = AdderS.C.instance
 
@@ -57,12 +57,12 @@ module Server =
         let res0 = new DomainModel.Buf<int>()
         let c = c0.receiveHELLO(C, res0)
         //printfn "After receive once"
-        match c.branch() with 
-            | :? AdderS.BYE as bye-> 
+        match c.branch() with
+            | :? AdderS.BYE as bye->
                 printfn"receive bye"
                 bye.receive(C).sendBYE(C).finish()
-            | :? AdderS.ADD as add -> 
-                printfn"receive add" 
+            | :? AdderS.ADD as add ->
+                printfn"receive add"
                 let res1 = new DomainModel.Buf<int>()
                 let res2 = new DomainModel.Buf<int>()
 

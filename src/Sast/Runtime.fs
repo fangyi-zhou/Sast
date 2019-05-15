@@ -3,7 +3,7 @@
 open ProviderImplementation.ProvidedTypes
 open ScribbleGenerativeTypeProvider.CommunicationAgents
 open ScribbleGenerativeTypeProvider.DomainModel
-open ScribbleGenerativeTypeProvider.RefinementTypesDict
+//open ScribbleGenerativeTypeProvider.RefinementTypesDict
 
 // The router map stores only one element (called agent), that acts as a router in the system.
 // It redirects the messages to the internal actors
@@ -67,21 +67,21 @@ let getFromCache name elem =
     cache.Item(name).Get(elem)
 
 
-let mutable assertionLookUp = Map.empty<string, LoopUpDict>
-let initAssertionDict name (assertLookip:LoopUpDict) =
-    assertionLookUp <- assertionLookUp.Add(name, assertLookip)
-
-let getAssertionIndex name  =
-    assertionLookUp.Item(name).Index()
-
-let addToAssertionDict name elem =
-    assertionLookUp.Item(name).addToDict(elem)
-
-let runFooFunction name foo =
-    assertionLookUp.Item(name).runFooFunction(foo)
-
-let addArgValueToAssertionDict name argName rcv =
-    assertionLookUp.Item(name).addArgValue argName rcv
-
+//let mutable assertionLookUp = Map.empty<string, LoopUpDict>
+//let initAssertionDict name (assertLookip:LoopUpDict) =
+//    assertionLookUp <- assertionLookUp.Add(name, assertLookip)
+//
+// let getAssertionIndex name  =
+//     assertionLookUp.Item(name).Index()
+//
+// let addToAssertionDict name elem =
+//     assertionLookUp.Item(name).addToDict(elem)
+//
+// let runFooFunction name foo =
+//     assertionLookUp.Item(name).runFooFunction(foo)
+//
+// let addArgValueToAssertionDict name argName rcv =
+//     assertionLookUp.Item(name).addArgValue argName rcv
+//
 let setResults results (bufs:ISetResult []) =
     Seq.zip results (Array.toSeq bufs) |> Seq.iter (fun (res,buf:ISetResult) -> buf.SetValue(res))

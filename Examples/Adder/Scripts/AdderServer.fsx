@@ -2,9 +2,9 @@
 #load "AdderData.fsx"
 
 open ScribbleGenerativeTypeProvider
-                        
 
-type AdderS = 
+
+type AdderS =
         Provided.TypeProviderFile<"../../../Examples/Adder/Protocols/Adder.scr", "Adder", "S" ,"../../../Examples/Adder/Config/configS.yaml"
             ,Delimiter=AdderData.delims, TypeAliasing=AdderData.typeAliasing, AssertionsOn=true>
 
@@ -14,12 +14,12 @@ let rec adderServer (c0:AdderS.State20) =
     let res0 = new DomainModel.Buf<int>()
     let c = c0.receiveHELLO(C, res0)
     //printfn "After receive once"
-    match c.branch() with 
-        | :? AdderS.BYE as bye-> 
+    match c.branch() with
+        | :? AdderS.BYE as bye->
             printfn"receive bye"
             bye.receive(C).sendBYE(C).finish()
-        | :? AdderS.ADD as add -> 
-            printfn"receive add" 
+        | :? AdderS.ADD as add ->
+            printfn"receive add"
             let res1 = new DomainModel.Buf<int>()
             let res2 = new DomainModel.Buf<int>()
 
