@@ -1,0 +1,6 @@
+digraph G {
+compound = true;
+"9" [ label="9: " ];
+"9" -> "10" [ label="S?HELLO(x:int)" ];
+"10" [ label="10: " ];
+}
